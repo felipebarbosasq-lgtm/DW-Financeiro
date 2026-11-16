@@ -1,5 +1,5 @@
 // Estado compartilhado entre as telas.
-import { listar, salvar, remover, lerVendasHamburgueria } from './dados.js';
+import { listar, salvar, remover, removerColecao, lerVendasHamburgueria } from './dados.js';
 import { completarConfig, vendasHamburgueria, competencia, hojeTxt, txt, DIA, deTxt } from './fin.js';
 
 export const S = {
@@ -36,4 +36,17 @@ export async function gravar(col, obj) {
 export async function apagar(col, id) {
   await remover(col, id);
   S[col] = S[col].filter((x) => x.id !== id);
+}
+
+// Recomeçar do zero: apaga o que foi cadastrado à mão. As vendas da hamburgueria continuam.
+export async function apagarColecoes(cols) {
+  for (const c of cols) {
+    await removerColecao(c);
+    if (c === 'config') S.cfg = completarConfig(null);
+    else S[c] = [];
+  }
+  if (cols.includes('carteiras')) {
+    const { CARTEIRAS_PADRAO } = await import('./fin.js');
+    for (const c of CARTEIRAS_PADRAO) S.carteiras.push(await salvar('carteiras', { ...c, data_inicial: txt(new Date()) }));
+  }
 }

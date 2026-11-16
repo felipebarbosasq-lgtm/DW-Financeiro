@@ -1,4 +1,4 @@
-import { S, gravar } from '../estado.js';
+import { S, gravar, apagarColecoes } from '../estado.js';
 import { $, $$, esc, icone, abrirModal, fecharModal, toast, confirmar, baixarCSV, moedaCSV } from '../ui.js';
 import { GRUPOS, categoria, dataBR } from '../fin.js';
 import { modoDemo, resetarDemo } from '../dados.js';
@@ -46,6 +46,9 @@ export function render(el) {
         <button class="btn btn-borda" id="csvFixas">${icone('baixar', 16)} Contas fixas</button>
         <button class="btn btn-borda" id="jsonBk">${icone('baixar', 16)} Backup completo (JSON)</button>
       </div>
+      <h4>Começar do zero</h4>
+      <p class="mut">Apaga o que você cadastrou aqui (testes, lançamentos, contas fixas…). As vendas da hamburgueria não são apagadas.</p>
+      <button class="btn btn-perigo-txt" id="btZerar">🗑️ Apagar dados e recomeçar</button>
       ${modoDemo ? `<h4>Demonstração</h4><p class="mut">Os dados de exemplo ficam só neste navegador.</p><button class="btn btn-perigo-txt" id="btReset">Recomeçar com dados de exemplo</button>` : `<h4>Acesso</h4><p class="mut">Só o login de dono entra aqui. Logins da equipe (garçom, caixa, gerente) são bloqueados pelo banco.</p>`}
     </div>
   </section>
@@ -73,8 +76,48 @@ export function render(el) {
     const dados = { gerado_em: new Date().toISOString(), config: S.cfg, carteiras: S.carteiras, recorrentes: S.recorrentes, lancamentos: S.lancamentos.map(({ comprovante, ...l }) => l), metas: S.metas, orcamentos: S.orcamentos };
     const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([JSON.stringify(dados, null, 2)], { type: 'application/json' })); a.download = `backup-financeiro-${new Date().toISOString().slice(0, 10)}.json`; a.click();
   };
+  $('#btZerar', el).onclick = () => zerar();
   $('#btReset', el)?.addEventListener('click', async () => {
     if (!(await confirmar('Recomeçar demonstração', 'Apagar tudo o que você lançou na demonstração e voltar aos dados de exemplo?', 'Recomeçar', true))) return;
     resetarDemo(); location.reload();
   });
+}
+
+// Recomeçar do zero, escolhendo o que apagar
+function zerar() {
+  const n = (c) => S[c].length;
+  const opcoes = [
+    ['lancamentos', 'Receitas, despesas, transferências e pagamentos', n('lancamentos'), true],
+    ['recorrentes', 'Contas fixas (salários, aluguel…)', n('recorrentes'), true],
+    ['metas', 'Metas', n('metas'), true],
+    ['orcamentos', 'Orçamentos', n('orcamentos'), true],
+    ['carteiras', 'Carteiras e saldos iniciais (voltam ao padrão, com saldo zero)', n('carteiras'), false],
+    ['config', 'Categorias e taxas da maquininha (voltam ao padrão)', null, false],
+  ];
+  const m = abrirModal('Apagar dados e recomeçar', `
+    <form id="fZerar" class="form">
+      <p>Marque o que quer apagar:</p>
+      ${opcoes.map(([k, nome, qtd, marcado]) => `<label class="interruptor"><input type="checkbox" name="col" value="${k}" ${marcado ? 'checked' : ''}><span></span> <em>${nome}${qtd != null ? ` <small class="mut">(${qtd})</small>` : ''}</em></label>`).join('')}
+      <p class="mut">As vendas da hamburgueria continuam aparecendo normalmente. Dica: antes, baixe o "Backup completo".</p>
+      <label>Para confirmar, digite APAGAR<input name="conf" autocomplete="off" placeholder="APAGAR"></label>
+    </form>`,
+  '<span class="esp"></span><button type="button" class="btn btn-borda" id="zCanc">Cancelar</button><button class="btn btn-perigo" type="submit" form="fZerar" id="zOk">Apagar</button>');
+  $('#zCanc', m).onclick = fecharModal;
+  $('#fZerar', m).onsubmit = async (e) => {
+    e.preventDefault();
+    const d = new FormData(e.target);
+    const cols = d.getAll('col');
+    if (!cols.length) return toast('Marque pelo menos um item', true);
+    if (String(d.get('conf') || '').trim().toUpperCase() !== 'APAGAR') return toast('Digite APAGAR para confirmar', true);
+    $('#zOk', m).disabled = true;
+    try {
+      await apagarColecoes(cols);
+      fecharModal();
+      toast('Pronto! Dados apagados. Pode começar de novo.');
+      avisar();
+    } catch (err) {
+      toast(err.message, true);
+      $('#zOk', m).disabled = false;
+    }
+  };
 }

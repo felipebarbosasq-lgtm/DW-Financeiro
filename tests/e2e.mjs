@@ -65,6 +65,26 @@ try {
   const mes = await p.textContent('#nomeMes');
   await p.click('[data-m="-1"]');
   ok((await p.textContent('#nomeMes')) !== mes, 'troca de mês');
+  // Apagar dados e recomeçar (sem tocar nas vendas)
+  await p.evaluate(() => { location.hash = 'config'; });
+  await p.click('#btZerar');
+  await p.fill('[name=conf]', 'apagar');
+  await p.click('#zOk');
+  await p.waitForTimeout(400);
+  await p.evaluate(() => { location.hash = 'despesas'; });
+  await p.waitForTimeout(300);
+  ok((await p.textContent('.tela')).includes('Nenhuma despesa'), 'apagar dados zera os lançamentos');
+  await p.evaluate(() => { location.hash = 'fixas'; });
+  await p.waitForTimeout(300);
+  ok((await p.textContent('.tela')).includes('Nenhuma conta fixa'), 'apagar dados zera as contas fixas');
+  await p.evaluate(() => { location.hash = 'vendas'; });
+  await p.waitForTimeout(300);
+  ok(!(await p.textContent('.tela')).includes('Nenhuma venda neste mês'), 'vendas da hamburgueria continuam');
+  await p.reload();
+  await p.waitForSelector('.kpis');
+  await p.evaluate(() => { location.hash = 'despesas'; });
+  await p.waitForTimeout(300);
+  ok((await p.textContent('.tela')).includes('Nenhuma despesa'), 'continua zerado depois de recarregar');
   ok(!erros.length, `sem erros no navegador ${erros.join(' | ')}`);
 } catch (e) {
   console.error('✗', e.message); process.exitCode = 1;

@@ -106,6 +106,12 @@ export async function remover(colecao, id) {
   await sb(`/rest/v1/fin_registros?id=eq.${encodeURIComponent(id)}&colecao=eq.${colecao}`, { metodo: 'DELETE' });
 }
 
+// Apaga de uma vez todos os registros de uma coleção do financeiro (nunca toca nas vendas da hamburgueria)
+export async function removerColecao(colecao) {
+  if (modoDemo) { gravarLS(kCol(colecao), []); return; }
+  await sb(`/rest/v1/fin_registros?colecao=eq.${encodeURIComponent(colecao)}`, { metodo: 'DELETE' });
+}
+
 // ---------- Vendas da hamburgueria (somente leitura) ----------
 
 export async function lerVendasHamburgueria(desdeISO) {
