@@ -6,8 +6,17 @@ import { fileURLToPath } from 'node:url';
 
 const raiz = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const limpar = (v) => String(v || '').trim().replace(/^["']|["']$/g, '');
+// Aceita também o link do painel (supabase.com/dashboard/project/REF) e converte para https://REF.supabase.co
+let url = limpar(process.env.SUPABASE_URL);
+const ref = url.match(/supabase\.com\/dashboard\/project\/([a-z0-9]+)/i)?.[1];
+if (ref) url = `https://${ref}.supabase.co`;
+url = url.replace(/\/(rest|auth|storage)\/v1.*$/, '').replace(/\/+$/, '');
+if (url && !/^https:\/\/[a-z0-9-]+\.supabase\.co$/i.test(url)) {
+  console.error(`ERRO: SUPABASE_URL parece errada (${url}). Ela deve ser assim: https://SEU-PROJETO.supabase.co (Supabase › Project Settings › Data API › Project URL).`);
+  process.exit(1);
+}
 const cfg = {
-  supabaseUrl: limpar(process.env.SUPABASE_URL).replace(/\/(rest|auth)\/v1.*$/, '').replace(/\/+$/, ''),
+  supabaseUrl: url,
   supabaseAnonKey: limpar(process.env.SUPABASE_ANON_KEY),
 };
 if (/service_role/.test(Buffer.from((cfg.supabaseAnonKey.split('.')[1] || ''), 'base64').toString())) {

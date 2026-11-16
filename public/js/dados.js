@@ -60,6 +60,7 @@ export async function entrar(email, senha) {
     const t = `${j.error_code || ''} ${j.msg || j.message || ''}`.toLowerCase();
     if (t.includes('invalid_credentials') || t.includes('invalid login')) throw new Error('E-mail ou senha incorretos. Use o mesmo login de dono do painel da hamburgueria.');
     if (t.includes('email_provider_disabled')) throw new Error('O login por e-mail está desligado no Supabase (Authentication › Sign In / Providers › Email).');
+    if (r.status === 404) throw new Error('Endereço do Supabase errado. No Netlify, a variável SUPABASE_URL deve ser assim: https://SEU-PROJETO.supabase.co. Corrija e faça um novo deploy.');
     if (r.status === 401 || t.includes('api key')) throw new Error('Chave do Supabase errada. Confira SUPABASE_ANON_KEY na Netlify.');
     throw new Error(`O banco recusou o login (${r.status}). ${j.msg || j.message || ''}`);
   }
