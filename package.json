@@ -1,0 +1,13 @@
+{
+  "name": "dom-web-financeiro",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Dom Web Financeiro: contas a pagar, lançamentos, resultado e projeção de caixa ligados às vendas do DOM Web",
+  "type": "module",
+  "scripts": {
+    "build": "node tools/build-config.mjs",
+    "preview": "node tools/preview.mjs",
+    "test": "node tests/calculos.mjs && node tests/e2e.mjs"
+  },
+  "engines": { "node": ">=20" }
+}
