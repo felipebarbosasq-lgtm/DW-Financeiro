@@ -145,6 +145,13 @@ export function ocorrencias(recorrentes, ini, fim) {
     if (r.ativo === false) continue;
     const comeco = r.inicio ? deTxt(r.inicio) : new Date(2000, 0, 1);
     const termino = r.fim ? deTxt(r.fim) : new Date(2100, 0, 1);
+    if (r.frequencia === 'quinzenal') {
+      // A cada 15 dias, contando a partir do primeiro pagamento (inicio)
+      const d = new Date(comeco);
+      if (d < dIni) d.setDate(d.getDate() + Math.ceil((dIni - d) / (15 * DIA)) * 15);
+      for (; d <= dFim; d.setDate(d.getDate() + 15)) if (d >= dIni && d <= termino) lista.push({ r, venc: txt(d), comp: txt(d) });
+      continue;
+    }
     if (r.frequencia === 'semanal') {
       const d = new Date(dIni);
       while (d.getDay() !== Number(r.dia_semana ?? 1)) d.setDate(d.getDate() + 1);

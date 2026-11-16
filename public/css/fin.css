@@ -446,3 +446,10 @@ legend { font-size: 13px; font-weight: 600; color: var(--c6); padding: 0 4px; }
   .ac-linha { flex-wrap: wrap; }
   .ac-desc { width: calc(100% - 120px); flex: none; }
 }
+
+/* Datas no iPad/iPhone não passam da janela */
+.linha2 > * { min-width: 0; }
+.form input[type=date] { -webkit-appearance: none; appearance: none; min-width: 0; min-height: 44px; text-align: left; display: block; }
+.f-prox { background: var(--amarelo-claro); border: 1px solid #fde3a0; border-radius: 12px; padding: 10px 12px; font-size: 14px; color: #6b4600; display: flex; flex-wrap: wrap; gap: 4px 8px; }
+.f-prox:empty { display: none; }
+.interruptor em { font-style: normal; }

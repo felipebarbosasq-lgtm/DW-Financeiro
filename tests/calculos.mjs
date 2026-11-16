@@ -46,3 +46,12 @@ const p = projecao(cfg, 1000, [], rec, [], 10, '2026-03-25');
 assert.equal(p.serie.length, 11);
 assert.equal(p.serie.at(-1).saldo, 1000 - 50 * 3, 'aluguel de jan, fev (atrasados) e março');
 console.log('✓ cálculos ok');
+
+// Quinzenal: a cada 15 dias a partir do primeiro pagamento
+const q = [{ id: 'q1', descricao: 'Gleici', valor: 1100, frequencia: 'quinzenal', inicio: '2026-11-16', categoria_id: 'pes_salarios' }];
+assert.deepEqual(ocorrencias(q, '2026-11-01', '2027-01-05').map((o) => o.venc), ['2026-11-16', '2026-12-01', '2026-12-16', '2026-12-31'], 'quinzenal de 15 em 15 dias');
+assert.deepEqual(ocorrencias(q, '2026-12-10', '2026-12-31').map((o) => o.venc), ['2026-12-16', '2026-12-31'], 'quinzenal começando no meio do período');
+const pagoHoje = [{ tipo: 'despesa', valor: 1100, data: '2026-11-16', status: 'pago', recorrente_id: 'q1', competencia: '2026-11-16', categoria_id: 'pes_salarios' }];
+const prox = contasAPagar(q, pagoHoje, '2026-11-01', '2026-12-31').find((c) => !c.paga);
+assert.equal(prox.vencimento, '2026-12-01', 'pagou hoje: próximo daqui a 15 dias');
+console.log('✓ quinzenal ok');
